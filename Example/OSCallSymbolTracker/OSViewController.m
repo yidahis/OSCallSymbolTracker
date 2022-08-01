@@ -7,6 +7,8 @@
 //
 
 #import "OSViewController.h"
+#import "OSCallSymbolTracker/OSCallSymbolTracker.h"
+#import <FCUUID/FCUUID.h>
 
 @interface OSViewController ()
 
@@ -18,12 +20,20 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+    
+    [FCUUID uuid];
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    appOrderFile(^(NSString * _Nonnull orderFilePath) {
+        NSLog(@"%@",orderFilePath);
+    });
 }
 
 @end
