@@ -9,6 +9,7 @@
 #import "OSViewController.h"
 #import "OSCallSymbolTracker/OSCallSymbolTracker.h"
 #import <FCUUID/FCUUID.h>
+#import <OSCallSymbolTracker_Example-Swift.h>
 
 @interface OSViewController ()
 
@@ -31,9 +32,11 @@
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-    appOrderFile(^(NSString * _Nonnull orderFilePath) {
-        NSLog(@"%@",orderFilePath);
-    });
+//    appOrderFile(^(NSString * _Nonnull orderFilePath) {
+//        NSLog(@"%@",orderFilePath);
+//    });
+    
+    [Tools call];
 }
 
 @end
