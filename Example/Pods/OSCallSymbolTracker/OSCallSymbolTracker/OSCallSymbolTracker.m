@@ -61,9 +61,13 @@ void __sanitizer_cov_trace_pc_guard(uint32_t *guard) {
     OSAtomicEnqueue(&qHead, node, offsetof(PointerNode, next));
 }
 
+
+static NSMutableSet<NSString *> *moduleNameSet;
+
 extern NSArray <NSString *> *getAllFunctions(NSString *currentFuncName) {
     NSMutableSet<NSString *> *unqSet = [NSMutableSet setWithObject:currentFuncName];
     NSMutableArray <NSString *> *functions = [NSMutableArray array];
+    moduleNameSet = [[NSMutableSet alloc] init];
     while (YES) {
         PointerNode *front = OSAtomicDequeue(&qHead, offsetof(PointerNode, next));
         if(front == NULL) {
@@ -73,6 +77,13 @@ extern NSArray <NSString *> *getAllFunctions(NSString *currentFuncName) {
         // dladdr获取地址符号信息
         dladdr(front->pointer, &info);
         NSString *name = @(info.dli_sname);
+        
+        NSString *fname = @(info.dli_fname);
+        NSString *moduleName = [[fname componentsSeparatedByString:@"Frameworks"].lastObject  componentsSeparatedByString:@".framework"].firstObject;
+        NSLog(@"%@",moduleName);
+        if ([moduleNameSet containsObject:moduleName] == NO) {
+            [moduleNameSet addObject:moduleName];
+        }
         // 去除重复调用
         if([unqSet containsObject:name]) {
             continue;
@@ -88,6 +99,7 @@ extern NSArray <NSString *> *getAllFunctions(NSString *currentFuncName) {
 
 }
 
+
 #pragma mark - public
 
 extern NSArray <NSString *> *getAppCalls(void) {
@@ -98,9 +110,6 @@ extern NSArray <NSString *> *getAppCalls(void) {
     NSString* curFuncationName = [NSString stringWithUTF8String:__FUNCTION__];
     return getAllFunctions(curFuncationName);
 }
-
-
-
 
 extern void appOrderFile(void(^completion)(NSString* orderFilePath)) {
     
@@ -114,6 +123,15 @@ extern void appOrderFile(void(^completion)(NSString* orderFilePath)) {
         NSLog(@"[orderFile]: %@",orderFileContent);
         NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"orderFile.order"];
         [orderFileContent writeToFile:filePath
+                           atomically:YES
+                             encoding:NSUTF8StringEncoding
+                                error:nil];
+        
+        NSArray *modules = moduleNameSet.allObjects;
+        NSString *moduleFileContent = [modules.reverseObjectEnumerator.allObjects componentsJoinedByString:@"\n"];
+        NSLog(@"[moduleFileContent]: %@",moduleFileContent);
+        NSString *moduleFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"module.txt"];
+        [moduleFileContent writeToFile:moduleFilePath
                            atomically:YES
                              encoding:NSUTF8StringEncoding
                                 error:nil];
